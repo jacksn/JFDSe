@@ -36,12 +36,20 @@
 #include "stm32f1xx_it.h"
 
 /* USER CODE BEGIN 0 */
+#include "types.h"
+
+extern bool bdiTimerFlag;
+extern unsigned int bdiTimer;
+extern unsigned int delayTimer;
+extern unsigned char timer_flag_1Hz;
+extern unsigned char timer_flag_100Hz;
 
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern I2C_HandleTypeDef hi2c1;
+extern TIM_HandleTypeDef htim4;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -104,6 +112,43 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
   /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM4 global interrupt.
+*/
+void TIM4_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM4_IRQn 0 */
+	static dword tick = 0;
+
+	if( delayTimer >= 25 ) delayTimer -= 25;
+	else delayTimer = 0;
+
+	if( bdiTimerFlag ) bdiTimer += 25;
+
+	tick++;
+	if( tick >= 400 )  // 100Hz
+	{
+		tick = 0;
+	    static dword tick2 = 0;
+
+	    tick2++;
+	    if( tick2 == 100 ) // 1Hz
+	    {
+	    	tick2 = 0;
+            timer_flag_1Hz++;
+	    }
+
+	    //disk_timerproc();
+	    timer_flag_100Hz++;
+	}
+
+  /* USER CODE END TIM4_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim4);
+  /* USER CODE BEGIN TIM4_IRQn 1 */
+
+  /* USER CODE END TIM4_IRQn 1 */
 }
 
 /**

@@ -35,18 +35,18 @@
 #include "fatfs.h"
 #include "i2c.h"
 #include "sdio.h"
+#include "tim.h"
 #include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
+
 #include "ff.h"
 #include "lcd1602.h"
 #include <stdint.h>
 #include <stdio.h>
-//#include "stm32f1xx_hal_rcc.h"
-//#include "stm32f1xx_hal_gpio.h"
-//#include "stm32f103xe.h"
+#include "types.h"
 
 /* USER CODE END Includes */
 
@@ -98,16 +98,14 @@ long int FileIndex;
 //__IO bool DevWasConfigured = false;
 uint32_t trackNumber;
 
+bool LOG_BDI_PORTS = false;
 
-uint8_t fdcCommandReg; 	// 0x1F
-uint8_t fdcTrackReg;	// 0x3F
-uint8_t fdcSectorReg;	// 0x5F
-uint8_t fdcDataReg;		// 0x7F
-uint8_t fdcSystemReg;	// 0xFF
-
-volatile enWDState WDState;
-volatile enWDDataStatus WDDataStatus;
-volatile enWDStatus WDStatus;
+unsigned char timer_flag_1Hz = 0;
+unsigned char timer_flag_100Hz = 0;
+volatile unsigned int delayTimer = 0;
+volatile unsigned int tapeTimer = 0;
+volatile bool bdiTimerFlag = true;
+volatile unsigned int bdiTimer = 0;
 
 /* USER CODE END PV */
 
@@ -116,20 +114,29 @@ void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void GPIO_Config(void);
-void USART2_Config(void);
-void SendChar2USART(char c);
-btns readKeyboard(void);
-long int readHXCMFMFile(void);
 long int readCylinder(long int);
 long int saveTrack(long int);
 void saveCopiedTrack( long int );
+long int readHXCMFMFile(void);
 long int readDirectory(char * DirPath);
-static void fault_err (FRESULT rc);
+btns readKeyboard(void);
 void Error2LCD(char * ErrorStr);
+void GPIO_Config(void);
+void TIM4_Config(void);
 void Status2LCD (void);
+static void fault_err (FRESULT rc);
+void USART2_Config(void);
+void SendChar2USART(char c);
 static void _delay(__IO uint32_t nCount);
-void Prep4USBFS(void);
+void Serial_Routine(void);
+void BDI_ResetWrite(void);
+void BDI_Write(byte);
+void BDI_ResetRead(word);
+bool BDI_Read(byte*);
+void BDI_Routine(void);
+dword get_ticks(void);
+void BDI_StopTimer(void);
+void BDI_StartTimer(void);
 
 /* USER CODE END PFP */
 
@@ -156,12 +163,14 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_SDIO_SD_Init();
+  MX_TIM4_Init();
   MX_USART2_UART_Init();
   MX_FATFS_Init();
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
 	GPIO_Config();
+	TIM4_Config();
 
   /* USER CODE END 2 */
 
@@ -437,6 +446,10 @@ int main(void)
 			}
 			case noneState:
 				break;
+	        //Serial_Routine();
+            //Tape_Routine();
+            BDI_Routine();
+
 		}
   /* USER CODE END WHILE */
 
@@ -700,11 +713,17 @@ void Error2LCD(char * ErrorStr)
 	lcdPrintStr("- Push any key -" );
 	readKeyboard();
 }
-void GPIO_Config()
+void GPIO_Config(void)
 {
 	ledDriveA_GPIO_Port->BSRR = ledDriveA_Pin;
 	ledDriveB_GPIO_Port->BSRR = ledDriveB_Pin;
 	ledStep_GPIO_Port->BSRR = ledStep_Pin;
+}
+
+void TIM4_Config(void)
+{
+	TIM4->DIER = TIM_DIER_UIE;
+	TIM4->CR1 |= TIM_CR1_CEN;
 }
 
 void Status2LCD(void)
@@ -754,6 +773,191 @@ static void _delay(__IO uint32_t nCount)
 
 
 	for (index = (100000 * nCount); index != 0; index--);
+}
+
+void Serial_Routine()
+{
+/*    while( uart0.GetRxCntr() > 0  )
+    {
+        char temp = uart0.ReadByte();
+
+        if( temp == 0x0a )
+        {
+            cmd[ cmdSize ] = 0;
+            cmdSize = 0;
+
+            if( strcmp( cmd, "test stack" ) == 0 ) TestStack();
+            else if( strcmp( cmd, "log bdi" ) == 0 ) LOG_BDI_PORTS = true;
+            else if( strcmp( cmd, "update rom" ) == 0 )
+            {
+                Spectrum_InitRom();
+            }
+            else if( strcmp( cmd, "log wait off" ) == 0 ) LOG_WAIT = false;
+            else if( strcmp( cmd, "log wait" ) == 0 ) LOG_WAIT = true;
+            //else if( strcmp( cmd, "test heap" ) == 0 ) TestHeap();
+            else if( strcmp( cmd, "reset" ) == 0 ) while( true );
+            else if( strcmp( cmd, "pc" ) == 0 )
+            {
+                SystemBus_TestConfiguration();
+            }
+            else
+            {
+                __TRACE( "cmd: %s\n", cmd );
+               LOG_BDI_PORTS = false;
+            }
+        }
+        else if( temp == 0x08 )
+        {
+            if( cmdSize > 0 )
+            {
+                cmdSize--;
+
+                const char delStr[2] = { 0x20, 0x08 };
+                uart0.WriteFile( (byte*) delStr, 2 );
+            }
+        }
+        else if( temp != 0x0d && cmdSize < MAX_CMD_SIZE )
+        {
+            cmd[ cmdSize++ ] = temp;
+        }
+    }
+*/
+}
+
+void BDI_ResetWrite()
+{
+    SystemBus_Write( 0xc00060, 0x8000 );
+}
+
+void BDI_Write( byte data )
+{
+    SystemBus_Write( 0xc00060, data );
+}
+
+void BDI_ResetRead( word counter )
+{
+    SystemBus_Write( 0xc00061, 0x8000 | counter );
+}
+
+bool BDI_Read( byte *data )
+{
+    word result = SystemBus_Read( 0xc00061 );
+    *data = (byte) result;
+
+    return ( result & 0x8000 ) != 0;
+}
+
+void BDI_Routine()
+{
+    int ioCounter = 0x20;
+
+    word trdosStatus = SystemBus_Read( 0xc00019 );
+
+    while( ( trdosStatus & 1 ) != 0 )
+    {
+        bool trdosWr = ( trdosStatus & 0x02 ) != 0;
+        byte trdosAddr = SystemBus_Read( 0xc0001a );
+
+        static int counter = 0;
+
+        if( trdosWr )
+        {
+            byte trdosData = SystemBus_Read( 0xc0001b );
+            fdc_write( trdosAddr, trdosData );
+
+            if( LOG_BDI_PORTS )
+            {
+                if( trdosAddr == 0x7f )
+                {
+                    if( counter == 0 ) __TRACE( "Data write : " );
+
+                    __TRACE( "%.2x.", trdosData );
+
+                    counter++;
+                    if( counter == 16 )
+                    {
+                        counter = 0;
+                        __TRACE( "\n" );
+                    }
+                }
+                else //if( trdosAddr != 0xff )
+                {
+                    if( counter != 0 )
+                    {
+                        counter = 0;
+                        __TRACE( "\n" );
+                    }
+
+                    word specPc = SystemBus_Read( 0xc00001 );
+                    __TRACE( "0x%.4x WR : 0x%.2x, 0x%.2x\n", specPc, trdosAddr, trdosData );
+                }
+            }
+        }
+        else
+        {
+            byte trdosData = fdc_read( trdosAddr );
+            SystemBus_Write( 0xc0001b, trdosData );
+
+            if( LOG_BDI_PORTS )
+            {
+                if( trdosAddr == 0x7f )
+                {
+                    if( counter == 0 ) __TRACE( "Data read : " );
+
+                    __TRACE( "%.2x.", trdosData );
+
+                    counter++;
+                    if( counter == 16 )
+                    {
+                        counter = 0;
+                        __TRACE( "\n" );
+                    }
+                }
+                else if( trdosAddr != 0xff )
+                {
+                    if( counter != 0 )
+                    {
+                        counter = 0;
+                        __TRACE( "\n" );
+                    }
+
+                    word specPc = SystemBus_Read( 0xc00001 );
+                    __TRACE( "0x%.4x RD : 0x%.2x, 0x%.2x\n", specPc, trdosAddr, trdosData );
+                }
+            }
+        }
+
+        SystemBus_Write( 0xc0001d, fdc_read( 0xff ) );
+        SystemBus_Write( 0xc00019, 0 );
+
+        fdc_dispatch();
+
+        SystemBus_Write( 0xc0001d, fdc_read( 0xff ) );
+        //SystemBus_Write( 0xc00019, 0 );
+
+        if( --ioCounter == 0 ) break;
+
+        trdosStatus = SystemBus_Read( 0xc00019 );
+        if( ( trdosStatus & 1 ) == 0 ) break;
+    }
+
+    fdc_dispatch();
+    SystemBus_Write( 0xc0001d, fdc_read( 0xff ) );
+}
+
+dword get_ticks()
+{
+    return bdiTimer;
+}
+
+void BDI_StopTimer()
+{
+    bdiTimerFlag = false;
+}
+
+void BDI_StartTimer()
+{
+    bdiTimerFlag = true;
 }
 
 /* USER CODE END 4 */
