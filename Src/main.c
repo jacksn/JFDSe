@@ -141,6 +141,8 @@ void BDI_StartTimer(void);
 void __TRACE( const char *str, ... );
 byte readCPUDataBus(void);
 void writeCPUDataBus(byte data);
+void Spectrum_UpdateDisks(void);
+void SD_Init(void);
 
 /* USER CODE END PFP */
 
@@ -1077,6 +1079,38 @@ void writeCPUDataBus(byte data)
 	CPUDataBusPort->ODR |= (data & 0xFFFF0000);
 }
 
+void Spectrum_UpdateDisks()
+{
+    for( int i = 0; i < 4; i++ )
+    {
+        fdc_open_image( i, specConfig.specImages[ i ].name );
+        floppy_disk_wp( i, &specConfig.specImages[i].readOnly );
+    }
+}
+
+void SD_Init()
+{
+    if( ( disk_status(0) & STA_NODISK ) == 0 && ( disk_status(0) & STA_NOINIT ) != 0 )
+    {
+        disk_initialize( 0 );
+
+        if( ( disk_status(0) & STA_NOINIT ) != 0 )
+        {
+            __TRACE( "SD card init error :(\n" );
+        }
+        else
+        {
+            __TRACE( "SD card init OK..\n" );
+            //MassStorage_UpdateCharacteristics();
+
+            static FATFS fatfs;
+            f_mount( 0, &fatfs );
+
+            RestreConfig();
+            FPGA_Config();
+        }
+    }
+}
 /* USER CODE END 4 */
 
 #ifdef USE_FULL_ASSERT
