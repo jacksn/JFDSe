@@ -103,18 +103,27 @@
 #define D1_Pin GPIO_PIN_9
 #define D1_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+#define nIORQ (nIORQ_GPIO_Port->IDR & nIORQ_Pin)
 #define nDOS (nDOS_GPIO_Port->IDR & nDOS_Pin)
 #define nRD  (nRD_GPIO_Port->IDR & nRD_Pin)
 #define nWR  (nWR_GPIO_Port->IDR & nWR_Pin)
+
 #define ledDriveA_On  (ledDriveA_GPIO_Port->BRR  = ledDriveA_Pin)
 #define ledDriveA_Off (ledDriveA_GPIO_Port->BSRR = ledDriveA_Pin)
 #define ledDriveB_On  (ledDriveB_GPIO_Port->BRR  = ledDriveB_Pin)
 #define ledDriveB_Off (ledDriveB_GPIO_Port->BSRR = ledDriveB_Pin)
+
+#define ledStep_On  (ledStep_GPIO_Port->BRR  = ledStep_Pin)
+#define ledStep_Off (ledStep_GPIO_Port->BSRR = ledStep_Pin)
+
 #define A0 (A0_GPIO_Port->IDR & A0_Pin)
 #define A5 (A5_GPIO_Port->IDR & A5_Pin)
 #define A6 (A6_GPIO_Port->IDR & A6_Pin)
 #define A7 (A7_GPIO_Port->IDR & A7_Pin)
-#define fdcPort (A5_GPIO_Port->IDR & 0x38)
+
+#define fdc_GPIO_Port A0_GPIO_Port
+
+#define CPUDataBusPort D0_GPIO_Port
 
 typedef enum
 {
@@ -183,7 +192,7 @@ typedef enum
 #define MAX_PATH_LEN	64
 
 #define FILE_NAME_LEN	14
-// 1 символ{d,f} + длина{8.3} + 1 завершающий 0 = 14
+// 1 пїЅпїЅпїЅпїЅпїЅпїЅ{d,f} + пїЅпїЅпїЅпїЅпїЅ{8.3} + 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 0 = 14
 
 #pragma pack(1)
 
@@ -196,7 +205,7 @@ typedef struct
 	unsigned short floppyBitRate;
 	unsigned char floppyiftype;
 	unsigned long mfmTrackListOffset;
-} MFMIMG;	// 19 байт
+} MFMIMG;	// 19 пїЅпїЅпїЅпїЅ
 
 typedef struct
 {
@@ -204,7 +213,7 @@ typedef struct
 	unsigned char side_number;
 	unsigned long mfmTrackSize;
 	unsigned long mfmtrackoffset;
-} MFMTRACKIMG;	// 11 байт * number_of_track * number_of_side
+} MFMTRACKIMG;	// 11 пїЅпїЅпїЅпїЅ * number_of_track * number_of_side
 
 #pragma pack()
 

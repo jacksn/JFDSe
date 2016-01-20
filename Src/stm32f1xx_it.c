@@ -100,6 +100,20 @@ void EXTI9_5_IRQHandler(void)
 
 	if ( __HAL_GPIO_EXTI_GET_FLAG(nIORQ_Pin) )
 	{
+		if (nIORQ)
+		{
+			ledDriveA_Off;
+			// Set CPU DataBus pins as Floating Input
+			CPUDataBusPort->CRH = 0x44444444;
+		}
+		else
+		{
+			if(!nDOS)
+			{
+				ledDriveA_On;
+			}
+		}
+
 	#ifdef TRACE
 		//printf("/IORQ\n\r");
 		if ((nDOS == 0)&(A0 > 0))
@@ -122,10 +136,13 @@ void TIM4_IRQHandler(void)
   /* USER CODE BEGIN TIM4_IRQn 0 */
 	static dword tick = 0;
 
-	if( delayTimer >= 25 ) delayTimer -= 25;
-	else delayTimer = 0;
+	if( delayTimer >= 25 )
+		delayTimer -= 25;
+	else
+		delayTimer = 0;
 
-	if( bdiTimerFlag ) bdiTimer += 25;
+	if( bdiTimerFlag )
+		bdiTimer += 25;
 
 	tick++;
 	if( tick >= 400 )  // 100Hz

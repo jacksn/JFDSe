@@ -1,46 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <breakpoints>
 <breakpoint enabled="true" persistant="true" registered="true">
-<resource path="/" type="8"/>
-<marker type="org.eclipse.cdt.debug.core.cWatchpointMarker">
-<attrib name="enabled" value="true"/>
+<resource path="/JFDSe/Src/main.c" type="1"/>
+<marker lineNumber="912" type="org.eclipse.cdt.debug.core.cLineBreakpointMarker">
+<attrib name="message" value="Line breakpoint: main.c [line: 912]"/>
 <attrib name="org.eclipse.cdt.debug.core.condition" value=""/>
 <attrib name="org.eclipse.debug.core.id" value="org.eclipse.cdt.debug.core"/>
-<attrib name="org.eclipse.cdt.debug.core.read" value="false"/>
-<attrib name="workingset_name" value=""/>
 <attrib name="org.eclipse.cdt.debug.core.installCount" value="0"/>
-<attrib name="org.eclipse.cdt.debug.core.expression" value="baud_ofset"/>
-<attrib name="type" value="org.eclipse.cdt.debug.core.cWatchpointMarker"/>
-<attrib name="persistant" value="true"/>
-<attrib name="org.eclipse.cdt.debug.core.write" value="true"/>
-<attrib name="workingset_id" value="org.eclipse.debug.ui.breakpointWorkingSet"/>
-<attrib name="message" value="Write watchpoint:  [expression: &apos;baud_ofset&apos;]"/>
-<attrib name="org.eclipse.cdt.debug.core.range" value="0"/>
-<attrib name="registered" value="true"/>
-<attrib name="path" value="/"/>
-<attrib name="org.eclipse.cdt.debug.core.sourceHandle" value=""/>
-<attrib name="org.eclipse.debug.core.enabled" value="true"/>
-<attrib name="org.eclipse.cdt.debug.core.ignoreCount" value="0"/>
-</marker>
-</breakpoint>
-<breakpoint enabled="false" persistant="true" registered="true">
-<resource path="/JFDSe/Middlewares/Third_Party/FatFs/src/ff.c" type="1"/>
-<marker lineNumber="2328" type="org.eclipse.cdt.debug.core.cLineBreakpointMarker">
-<attrib name="enabled" value="false"/>
-<attrib name="org.eclipse.cdt.debug.core.condition" value=""/>
-<attrib name="org.eclipse.debug.core.id" value="org.eclipse.cdt.debug.core"/>
-<attrib name="workingset_name" value=""/>
-<attrib name="org.eclipse.cdt.debug.core.installCount" value="0"/>
-<attrib name="type" value="org.eclipse.cdt.debug.core.cLineBreakpointMarker"/>
-<attrib name="persistant" value="true"/>
+<attrib name="org.eclipse.cdt.debug.core.sourceHandle" value="D:\Prog\CoIDE\workspace\JFDSe\Src\main.c"/>
 <attrib name="org.eclipse.cdt.debug.core.breakpointType" value="0"/>
-<attrib name="workingset_id" value="org.eclipse.debug.ui.breakpointWorkingSet"/>
-<attrib name="message" value="Line breakpoint: ff.c [line: 2328]"/>
-<attrib name="registered" value="true"/>
-<attrib name="path" value="/JFDSe/Middlewares/Third_Party/FatFs/src/ff.c"/>
-<attrib name="org.eclipse.cdt.debug.core.sourceHandle" value="D:\Prog\CoIDE\workspace\JFDSe\Middlewares\Third_Party\FatFs\src\ff.c"/>
 <attrib name="org.eclipse.cdt.debug.core.ignoreCount" value="0"/>
-<attrib name="org.eclipse.debug.core.enabled" value="false"/>
+<attrib name="org.eclipse.debug.core.enabled" value="true"/>
+<attrib name="workingset_name" value=""/>
+<attrib name="workingset_id" value="org.eclipse.debug.ui.breakpointWorkingSet"/>
 </marker>
 </breakpoint>
 </breakpoints>

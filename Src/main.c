@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "types.h"
+#include "specBetadisk.h"
 
 /* USER CODE END Includes */
 
@@ -85,8 +86,8 @@ volatile machineState lastState = noneState;
 //
 MFMIMG *mfmimg;
 MFMTRACKIMG *mfmTrackImage;
-uint16_t mfmNumberOfTracks;				// общее кол-во треков в файле ( с учетом сторон )
-volatile uint16_t mfmNumberOfCylinders;		// общее кол-во цилиндров в файле
+uint16_t mfmNumberOfTracks;				// РѕР±С‰РµРµ РєРѕР»-РІРѕ С‚СЂРµРєРѕРІ РІ С„Р°Р№Р»Рµ ( СЃ СѓС‡РµС‚РѕРј СЃС‚РѕСЂРѕРЅ )
+volatile uint16_t mfmNumberOfCylinders;		// РѕР±С‰РµРµ РєРѕР»-РІРѕ С†РёР»РёРЅРґСЂРѕРІ РІ С„Р°Р№Р»Рµ
 //
 long int trackListBase;
 uint32_t temp_l1, temp_l2;
@@ -137,6 +138,9 @@ void BDI_Routine(void);
 dword get_ticks(void);
 void BDI_StopTimer(void);
 void BDI_StartTimer(void);
+void __TRACE( const char *str, ... );
+byte readCPUDataBus(void);
+void writeCPUDataBus(byte data);
 
 /* USER CODE END PFP */
 
@@ -171,7 +175,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	GPIO_Config();
 	TIM4_Config();
-
+	fdc_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -185,7 +189,7 @@ int main(void)
 	printf( "St%d\n\r", currentState );
 #endif
 		}
-		//WriteStats();
+        BDI_Routine();
 		switch ( currentState )
 		{
 			case init:
@@ -207,8 +211,8 @@ int main(void)
 			}
 			case selectDir:
 			{
-				currentState = selectFile;
-				strcpy( CurrDir, "/" );
+				//currentState = selectFile;
+				//strcpy( CurrDir, "/" );
 				break;
 			}
 			case loadCylinder:
@@ -253,10 +257,10 @@ int main(void)
 			case selectFile:
 			{
 				allFiles = readDirectory( CurrDir );
-				FileIndex = 0;	// index массива
+				FileIndex = 0;	// index РјР°СЃСЃРёРІР°
 				while ( currentState == selectFile )
 				{
-					// предполагается, что файлов как минимум, 1 (..) - директория вверх, выход
+					// РїСЂРµРґРїРѕР»Р°РіР°РµС‚СЃСЏ, С‡С‚Рѕ С„Р°Р№Р»РѕРІ РєР°Рє РјРёРЅРёРјСѓРј, 1 (..) - РґРёСЂРµРєС‚РѕСЂРёСЏ РІРІРµСЂС…, РІС‹С…РѕРґ
 					lcdSetCursor(0,0);
 					if ( allFiles == 1 )
 						lcdPrintStr("Dir is empty   \x7E");
@@ -289,7 +293,7 @@ int main(void)
 						}
 						case btnEnter:
 						{
-							if ( buff[ FILE_NAME_LEN * FileIndex ] == 32 )	// файл
+							if ( buff[ FILE_NAME_LEN * FileIndex ] == 32 )	// С„Р°Р№Р»
 								if ( strlen( CurrDir ) <= MAX_PATH_LEN - 1 - 12 )
 								{
 									strcpy( Image_File_Name, CurrDir );
@@ -322,21 +326,21 @@ int main(void)
 									Error2LCD( "Path too long  \x7E" );
 									break;
 								}
-							else	// директория
+							else	// РґРёСЂРµРєС‚РѕСЂРёСЏ
 							{
-								if ( !strcmp( (char const *)&buff[ FILE_NAME_LEN * FileIndex ], "*.." ) )	// вверх
+								if ( !strcmp( (char const *)&buff[ FILE_NAME_LEN * FileIndex ], "*.." ) )	// РІРІРµСЂС…
 								{
 									x = CurrDir + strlen( CurrDir );
 									while ( *x != '/' )	x--;
 									*++x = '\0';
 								}
-								else	// вход
+								else	// РІС…РѕРґ
 								{
 									if ( *( CurrDir + strlen( CurrDir ) - 1 ) != '/' )	strcat( CurrDir, "/" );
 									strcat( CurrDir, (char const *)&buff[ FILE_NAME_LEN * FileIndex + 1 ] );
 								}
 								allFiles = readDirectory( CurrDir );
-								FileIndex = 0;	// index массива
+								FileIndex = 0;	// index РјР°СЃСЃРёРІР°
 							}
 							break;
 						}
@@ -382,7 +386,7 @@ int main(void)
 			}
 			case copier:
 			{
-				// Вывод начального сообщения
+				// Р’С‹РІРѕРґ РЅР°С‡Р°Р»СЊРЅРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ
 				lcdSetCursor(0,0);
 				lcdPrintStr("Insert disk B:  ");
 				lcdSetCursor(0,1);
@@ -393,7 +397,7 @@ int main(void)
 				lcdPrintStr("Copying started");
 				lcdSetCursor(0,1);
 				lcdPrintStr("Wait for reset  ");
-				// Проверка, свободна ли шина SHUGART
+				// РџСЂРѕРІРµСЂРєР°, СЃРІРѕР±РѕРґРЅР° Р»Рё С€РёРЅР° SHUGART
 				i = 0;
 #ifdef TRACE
 	printf("Drv_Sel_1 active\n\r");
@@ -413,9 +417,9 @@ int main(void)
 	printf("TrackNumber=%d\n\r", trackNumber);
 #endif
 					_delay(1);
-					// Сохранение в таблице длины трека
+					// РЎРѕС…СЂР°РЅРµРЅРёРµ РІ С‚Р°Р±Р»РёС†Рµ РґР»РёРЅС‹ С‚СЂРµРєР°
 					track_lengs[ trackNumber ] = ( CurrBitW + 1 ) >> 3;
-					// Запись в файл трека
+					// Р—Р°РїРёСЃСЊ РІ С„Р°Р№Р» С‚СЂРµРєР°
 #ifdef TRACE
 					printf("Length[%d] = %d\n\r", trackNumber, track_lengs[ trackNumber ] );
 					for ( i = 0; i < 64; i++ )
@@ -423,7 +427,7 @@ int main(void)
 					printf("\n\r");
 #endif
 				saveCopiedTrack( trackNumber );
-					// Если трек нечетный и не последний, даем импульс STEP
+					// Р•СЃР»Рё С‚СЂРµРє РЅРµС‡РµС‚РЅС‹Р№ Рё РЅРµ РїРѕСЃР»РµРґРЅРёР№, РґР°РµРј РёРјРїСѓР»СЊСЃ STEP
 				}
 				NVIC_SystemReset();
 				break;
@@ -588,7 +592,7 @@ long int readHXCMFMFile(void)
 {
 	ret = f_stat( Image_File_Name, &fno );
 	if (ret)	return -1L;
-	// Если файл Read-Only, то ставим WP=0
+	// Р•СЃР»Рё С„Р°Р№Р» Read-Only, С‚Рѕ СЃС‚Р°РІРёРј WP=0
 /*	if ( fWP == (fno.fattrib & AM_RDO) )	// fWP=1 -> WP=0
 		pWP->BRR = FE_WP;	// WP=0
 	else
@@ -597,7 +601,7 @@ long int readHXCMFMFile(void)
 	ret = f_open(&file, Image_File_Name, FA_READ);
 	if (ret)	fault_err(ret);
 	//
-	ret = f_read(&file, buff, 0x800, &br);	// 0x800 - заголовки + таблица смещений треков
+	ret = f_read(&file, buff, 0x800, &br);	// 0x800 - Р·Р°РіРѕР»РѕРІРєРё + С‚Р°Р±Р»РёС†Р° СЃРјРµС‰РµРЅРёР№ С‚СЂРµРєРѕРІ
 	if (ret)	fault_err(ret);
 	//
 	ret = f_close(&file);
@@ -652,11 +656,11 @@ long int readHXCMFMFile(void)
 	return 0;
 }
 
-// Считывает имена файлов и поддиректорий в массив,
-// при этом добавляется первой буквой " ",
-// если это файл, или "*", если это поддиректория
-// Возвращает кол-во файлов и поддиректорий
-// Важно! ffconf.h : #define _FS_RPATH 0
+// РЎС‡РёС‚С‹РІР°РµС‚ РёРјРµРЅР° С„Р°Р№Р»РѕРІ Рё РїРѕРґРґРёСЂРµРєС‚РѕСЂРёР№ РІ РјР°СЃСЃРёРІ,
+// РїСЂРё СЌС‚РѕРј РґРѕР±Р°РІР»СЏРµС‚СЃСЏ РїРµСЂРІРѕР№ Р±СѓРєРІРѕР№ " ",
+// РµСЃР»Рё СЌС‚Рѕ С„Р°Р№Р», РёР»Рё "*", РµСЃР»Рё СЌС‚Рѕ РїРѕРґРґРёСЂРµРєС‚РѕСЂРёСЏ
+// Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕР»-РІРѕ С„Р°Р№Р»РѕРІ Рё РїРѕРґРґРёСЂРµРєС‚РѕСЂРёР№
+// Р’Р°Р¶РЅРѕ! ffconf.h : #define _FS_RPATH 0
 long int readDirectory( char * DirPath )
 {
 	ret = f_opendir( &dir, DirPath );	// Open the directory
@@ -664,7 +668,7 @@ long int readDirectory( char * DirPath )
 	//
 	for ( i = 0; i < ( MAX_TRACK_LEN * 2 / FILE_NAME_LEN ); i++ )
 	{
-		if ( i == 0 && strlen( DirPath ) > 1 )	// не корневая директория
+		if ( i == 0 && strlen( DirPath ) > 1 )	// РЅРµ РєРѕСЂРЅРµРІР°СЏ РґРёСЂРµРєС‚РѕСЂРёСЏ
 		{
 			memcpy( buff, "*..", 4 );
 			continue;
@@ -750,7 +754,7 @@ static void fault_err (FRESULT rc)
 	lcdPrintStr( (char *)"Error:");
 	lcdSetCursor(0,1);
 	lcdPrintStr( (char *)str );
-	while(1)	;
+	//while(1)	;
 }
 
 void USART2_Config(void)
@@ -826,43 +830,85 @@ void Serial_Routine()
 
 void BDI_ResetWrite()
 {
-    SystemBus_Write( 0xc00060, 0x8000 );
+/*
+	trdosFifoReadRst <= '1';
+ */
+//	SystemBus_WriteAtAddress( 0xc00060, 0x8000 );
 }
 
 void BDI_Write( byte data )
 {
-    SystemBus_Write( 0xc00060, data );
+/*
+	trdosFifoReadWrTmp <= data;
+	trdosFifoReadWr <= '1';
+*/
+//    SystemBus_WriteAtAddress( 0xc00060, data );
+	writeCPUDataBus(data);
 }
 
 void BDI_ResetRead( word counter )
 {
-    SystemBus_Write( 0xc00061, 0x8000 | counter );
+/*
+	trdosFifoWriteRst <= ARM_AD( 15 );
+	trdosFifoWriteCounter <= unsigned( ARM_AD( 10 downto 0 ));
+ */
+//    SystemBus_WriteAtAddress( 0xc00061, 0x8000 | counter );
 }
 
 bool BDI_Read( byte *data )
 {
-    word result = SystemBus_Read( 0xc00061 );
+/*
+	if addressReg( 7 downto 0 ) = x"61" then
+		ARM_AD <= trdosFifoWriteReady & "0000000" & trdosFifoWriteRdTmp;
+		if trdosFifoWriteReady = '1' then
+			trdosFifoWriteRd <= '1';
+		end if;
+
+	word result = SystemBus_ReadAtAddress( 0xc00061 );
+
     *data = (byte) result;
 
     return ( result & 0x8000 ) != 0;
+*/
+	*data = (byte) readCPUDataBus();
+	return 1;
 }
 
 void BDI_Routine()
 {
     int ioCounter = 0x20;
 
-    word trdosStatus = SystemBus_Read( 0xc00019 );
+    /*
+    		if addressReg( 7 downto 0 ) = x"19" then
+    			ARM_AD <= x"00" & b"000000" & specTrdosWr & specTrdosWait;
+    */
+    //word trdosStatus = SystemBus_ReadAtAddress( 0xc00019 );
 
-    while( ( trdosStatus & 1 ) != 0 )
+    while( !nDOS )
     {
-        bool trdosWr = ( trdosStatus & 0x02 ) != 0;
-        byte trdosAddr = SystemBus_Read( 0xc0001a );
+    	ledStep_On;
+/*
+        elsif addressReg( 7 downto 0 ) = x"1a" then
+			ARM_AD <= cpuA;
+
+*/
+        //byte trdosAddr = SystemBus_ReadAtAddress( 0xc0001a );
+
+    	uint32_t temp = fdc_GPIO_Port->IDR;
+
+
+    	byte trdosAddr = ((temp & (A7_Pin | A6_Pin | A5_Pin)) << 2) | (0x1E) | ((temp & A0_Pin) >> 2);
 
         static int counter = 0;
 
-        if( trdosWr )
+        if( !nWR )
         {
-            byte trdosData = SystemBus_Read( 0xc0001b );
+/*
+        	if addressReg( 7 downto 0 ) = x"1b" then
+				ARM_AD <= x"00" & cpuDout;
+*/
+        	//byte trdosData = SystemBus_ReadAtAddress( 0xc0001b );
+        	byte trdosData = readCPUDataBus();
             fdc_write( trdosAddr, trdosData );
 
             if( LOG_BDI_PORTS )
@@ -888,15 +934,18 @@ void BDI_Routine()
                         __TRACE( "\n" );
                     }
 
-                    word specPc = SystemBus_Read( 0xc00001 );
-                    __TRACE( "0x%.4x WR : 0x%.2x, 0x%.2x\n", specPc, trdosAddr, trdosData );
+                    __TRACE( "0x%.2x, 0x%.2x\n", trdosAddr, trdosData );
                 }
             }
         }
         else
         {
             byte trdosData = fdc_read( trdosAddr );
-            SystemBus_Write( 0xc0001b, trdosData );
+
+
+            //cpuDin <= trdosData;
+            //SystemBus_WriteAtAddress( 0xc0001b, trdosData );
+            writeCPUDataBus(trdosData);
 
             if( LOG_BDI_PORTS )
             {
@@ -921,28 +970,38 @@ void BDI_Routine()
                         __TRACE( "\n" );
                     }
 
-                    word specPc = SystemBus_Read( 0xc00001 );
-                    __TRACE( "0x%.4x RD : 0x%.2x, 0x%.2x\n", specPc, trdosAddr, trdosData );
+                    __TRACE( "0x%.2x, 0x%.2x\n", trdosAddr, trdosData );
                 }
             }
         }
 
-        SystemBus_Write( 0xc0001d, fdc_read( 0xff ) );
-        SystemBus_Write( 0xc00019, 0 );
+		//specTrdosPortFF <= fdc_read( 0xff );
+        //SystemBus_WriteAtAddress( 0xc0001d, fdc_read( 0xff ) );
+
+		//specTrdosWait <= '0';
+        //SystemBus_WriteAtAddress( 0xc00019, 0 );
 
         fdc_dispatch();
 
-        SystemBus_Write( 0xc0001d, fdc_read( 0xff ) );
+		//specTrdosPortFF <= fdc_read( 0xff );
+        //SystemBus_WriteAtAddress( 0xc0001d, fdc_read( 0xff ) );
         //SystemBus_Write( 0xc00019, 0 );
 
         if( --ioCounter == 0 ) break;
 
-        trdosStatus = SystemBus_Read( 0xc00019 );
-        if( ( trdosStatus & 1 ) == 0 ) break;
+/*
+		if addressReg( 7 downto 0 ) = x"19" then
+			ARM_AD <= x"00" & b"000000" & specTrdosWr & specTrdosWait;
+*/
+        //trdosStatus = SystemBus_ReadAtAddress( 0xc00019 );
+        if( !nDOS ) break;
     }
 
     fdc_dispatch();
-    SystemBus_Write( 0xc0001d, fdc_read( 0xff ) );
+
+	//specTrdosPortFF <= fdc_read( 0xff );
+    //SystemBus_WriteAtAddress( 0xc0001d, fdc_read( 0xff ) );
+	ledStep_Off;
 }
 
 dword get_ticks()
@@ -958,6 +1017,64 @@ void BDI_StopTimer()
 void BDI_StartTimer()
 {
     bdiTimerFlag = true;
+}
+
+void __TRACE( const char *str, ... )
+{
+/*  vsniprintf( fullStr, sizeof( fullStr ), str, ap );
+    va_end(ap);
+
+    if( traceNewLine )
+    {
+        Serial_Routine();
+        //const char delChar = 0x08;
+        //for( int i = 0; i <= cmdSize; i++ ) uart0.WriteFile( (byte*) &delChar, 1 );
+    }
+
+    char lastChar = 0;
+    char *strPos = fullStr;
+
+    while( *strPos != 0 )
+    {
+        lastChar = *strPos++;
+
+        if( lastChar == '\n' ) uart0.WriteFile( (byte*) "\r\n", 2 );
+        else uart0.WriteFile( (byte*) &lastChar, 1 );
+
+        WDT_Kick();
+    }
+
+    traceNewLine = ( lastChar == '\n' );
+
+    if( traceNewLine )
+    {
+        UART0_WriteText( ">" );
+
+        Serial_Routine();
+        if( cmdSize > 0 ) uart0.WriteFile( (byte*) cmd, cmdSize );
+    }
+    */
+}
+
+byte readCPUDataBus(void)
+{
+	// Set CPU DataBus pins as Floating Input
+	CPUDataBusPort->CRH = 0x44444444;
+
+	while (nWR){};
+
+	// Read and return CPU data
+	return (CPUDataBusPort->IDR & 0xFFFF0000) >> 16;
+}
+
+void writeCPUDataBus(byte data)
+{
+	// Reset CPU DataBus
+	CPUDataBusPort->BRR = 0xFFFF0000;
+	// Set CPU DataBus pins as Open-Drain output
+	CPUDataBusPort->CRH = 0x55555555;
+	// Send data on CPU DataBus
+	CPUDataBusPort->ODR |= (data & 0xFFFF0000);
 }
 
 /* USER CODE END 4 */
