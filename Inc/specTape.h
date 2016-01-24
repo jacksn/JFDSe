@@ -1,4 +1,3 @@
-/*
 #ifndef SPEC_TAPE_H_INCLUDED
 #define SPEC_TAPE_H_INCLUDED
 
@@ -17,4 +16,3 @@ bool Tape_FillBuffer();
 #endif
 
 
-*/

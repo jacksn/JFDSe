@@ -1,5 +1,7 @@
 #include "binary.h"
 #include <stdint.h>
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_i2c.h"
 
 #define lcdAddress				0x4E
 // commands
@@ -50,7 +52,7 @@
 
 uint8_t i2cBuffer[32];
 uint16_t i2cCount;
-extern I2C_HandleTypeDef hi2c2;
+extern I2C_HandleTypeDef hi2c1;
 
 uint8_t lcdDisplayFunction;
 uint8_t lcdDisplayControl;

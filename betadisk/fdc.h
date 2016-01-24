@@ -47,11 +47,6 @@ struct FDC {
     fdc_query_t query;
 };
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 void _fdc_set(int id, int val);
 int fdc_query(int id);
 
@@ -64,9 +59,5 @@ void fdc_dispatch(void);
 void fdc_write(word addr, byte data);
 byte fdc_read(word addr);
 void fdc_reset(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

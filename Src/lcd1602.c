@@ -6,7 +6,7 @@
 //Compatible with the Arduino IDE 1.0
 //Library version:1.1
 
-#include "i2c.h"
+//#include "i2c.h"
 #include "binary.h"
 #include "lcd1602.h"
 #include "stdio.h"
@@ -250,7 +250,7 @@ void lcdPrintStr(char *Text)
 
 void lcdPrintNum(int value)
 {
-	char buf[16];				// буфер
-	sprintf(buf, "%d", value);	// число превращаем в строку
+	char buf[16];				// пїЅпїЅпїЅпїЅпїЅ
+	sprintf(buf, "%d", value);	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	lcdPrintStr(buf);
 }

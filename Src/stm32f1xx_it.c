@@ -37,19 +37,24 @@
 
 /* USER CODE BEGIN 0 */
 #include "types.h"
-
+//#include "mxconstants.h"
 extern bool bdiTimerFlag;
 extern unsigned int bdiTimer;
 extern unsigned int delayTimer;
 extern unsigned char timer_flag_1Hz;
 extern unsigned char timer_flag_100Hz;
+extern uint32_t tempData;
+extern uint32_t tempIORQDOS;
+extern uint32_t tempRDWR;
 
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern I2C_HandleTypeDef hi2c1;
+extern SD_HandleTypeDef hsd;
 extern TIM_HandleTypeDef htim4;
+extern UART_HandleTypeDef huart2;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -97,30 +102,9 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+	// Set CPU DataBus pins as Floating Input
+	CPUDataBusPort->CRH = 0x44444444;
 
-	if ( __HAL_GPIO_EXTI_GET_FLAG(nIORQ_Pin) )
-	{
-		if (nIORQ)
-		{
-			ledDriveA_Off;
-			// Set CPU DataBus pins as Floating Input
-			CPUDataBusPort->CRH = 0x44444444;
-		}
-		else
-		{
-			if(!nDOS)
-			{
-				ledDriveA_On;
-			}
-		}
-
-	#ifdef TRACE
-		//printf("/IORQ\n\r");
-		if ((nDOS == 0)&(A0 > 0))
-		{
-		}
-	#endif
-	}
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
@@ -194,6 +178,34 @@ void I2C1_ER_IRQHandler(void)
   /* USER CODE BEGIN I2C1_ER_IRQn 1 */
 
   /* USER CODE END I2C1_ER_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART2 global interrupt.
+*/
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+* @brief This function handles SDIO global interrupt.
+*/
+void SDIO_IRQHandler(void)
+{
+  /* USER CODE BEGIN SDIO_IRQn 0 */
+
+  /* USER CODE END SDIO_IRQn 0 */
+  HAL_SD_IRQHandler(&hsd);
+  /* USER CODE BEGIN SDIO_IRQn 1 */
+
+  /* USER CODE END SDIO_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

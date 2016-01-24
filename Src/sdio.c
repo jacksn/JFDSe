@@ -73,14 +73,10 @@ void HAL_SD_MspInit(SD_HandleTypeDef* hsd)
   
     /**SDIO GPIO Configuration    
     PC8     ------> SDIO_D0
-    PC9     ------> SDIO_D1
-    PC10     ------> SDIO_D2
-    PC11     ------> SDIO_D3
     PC12     ------> SDIO_CK
     PD2     ------> SDIO_CMD 
     */
-    GPIO_InitStruct.Pin = sdioD0_Pin|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11 
-                          |sdioCK_Pin;
+    GPIO_InitStruct.Pin = sdioD0_Pin|sdioCK_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -90,6 +86,9 @@ void HAL_SD_MspInit(SD_HandleTypeDef* hsd)
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     HAL_GPIO_Init(sdioCMD_GPIO_Port, &GPIO_InitStruct);
 
+    /* Peripheral interrupt init*/
+    HAL_NVIC_SetPriority(SDIO_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(SDIO_IRQn);
   /* USER CODE BEGIN SDIO_MspInit 1 */
 
   /* USER CODE END SDIO_MspInit 1 */
@@ -109,16 +108,15 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef* hsd)
   
     /**SDIO GPIO Configuration    
     PC8     ------> SDIO_D0
-    PC9     ------> SDIO_D1
-    PC10     ------> SDIO_D2
-    PC11     ------> SDIO_D3
     PC12     ------> SDIO_CK
     PD2     ------> SDIO_CMD 
     */
-    HAL_GPIO_DeInit(GPIOC, sdioD0_Pin|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11 
-                          |sdioCK_Pin);
+    HAL_GPIO_DeInit(GPIOC, sdioD0_Pin|sdioCK_Pin);
 
     HAL_GPIO_DeInit(sdioCMD_GPIO_Port, sdioCMD_Pin);
+
+    /* Peripheral interrupt Deinit*/
+    HAL_NVIC_DisableIRQ(SDIO_IRQn);
 
   }
   /* USER CODE BEGIN SDIO_MspDeInit 1 */

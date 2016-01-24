@@ -1,8 +1,9 @@
+/*
 #ifndef SPEC_SHELL_H_INCLUDED
 #define SPEC_SHELL_H_INCLUDED
 
 #include "system.h"
-#include "settings.h"
+//#include "settings.h"
 
 class CMenuItem
 {
@@ -52,7 +53,4 @@ const char *Shell_GetPath();
 
 #endif
 
-
-
-
-
+*/

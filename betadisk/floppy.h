@@ -5,7 +5,7 @@
 #ifndef __FLOPPY_H
 #define __FLOPPY_H
 
-#define MAX_FLOPPIES	2
+#define MAX_FLOPPIES	4
 
 #ifdef __cplusplus
 extern "C"

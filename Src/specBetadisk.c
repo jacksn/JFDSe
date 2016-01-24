@@ -1,4 +1,3 @@
-#include "stdio.h"
 #include <stdarg.h>
 #include <ctype.h>
 
@@ -107,7 +106,7 @@
 #define SYS_SEC_AREA       0xe0
 #define FDSC_SIZE          16
 
-struct sys_sec_area
+typedef struct
 {
 	byte unused_0;
 	byte first_sec;
@@ -123,9 +122,9 @@ struct sys_sec_area
 	byte erased;
 	byte label[8];
 	byte unused_4[3];
-} __attribute__(( packed ) );
+} sys_sec_area;
 
-const sys_sec_area scl_sys_sec_def =
+const /*__attribute__(( packed )) */ sys_sec_area scl_sys_sec_def =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 32, 32, 32, 32, 32, 32, 32, 32, 32 }, { 0 }, 0, { 32, 32, 32, 32, 32, 32, 32, 32 }, { 0, 0, 0 }
 };
@@ -139,11 +138,11 @@ enum
 	DISK_LAST,
 };
 
-struct img_fmt
+typedef struct
 {
 	byte fmt;
 	char ext[4];
-};
+} img_fmt;
 
 #define NUM_DSK_FORMATS 3
 
@@ -318,13 +317,13 @@ int open_dsk_image( byte drv_id, const char *filename )
 	FILINFO fi;
 
     //char lfn[1];
-   // fi.lfname = lfn;
+    //fi.lfname = lfn;
     //fi.lfsize = 0;
 
 	const char *p_ext;
 	const char *p_name;
 
-	byte wp = 0, fmt, boot_present, nfiles, boot_file;
+	byte wp = 0, fmt, nfiles/*, boot_present,  boot_file*/;
 	word cyl_cnt, side_cnt, i, last_sec;
 
 	p_ext = filename + strlen( filename );
@@ -366,8 +365,8 @@ int open_dsk_image( byte drv_id, const char *filename )
 
 	fmt &= 0x7f;
 
-	boot_present = 0;
-	boot_file = 0;
+	//boot_present = 0;
+	//boot_file = 0;
 
 	if ( fmt == DISK_SCL )
 	{
@@ -1371,7 +1370,7 @@ byte wd_dat_read()
 			word crc = crc_add( crc_init(), cur_drv->sec_buff[0] = cur_drv->cur_cyl );
 			if ( cur_drv->img_fmt == DISK_TRD )
 			{
-				cur_drv->sec_buff[1] = 0; // в TR-DOS всегда 0 ????
+				cur_drv->sec_buff[1] = 0; // пїЅ TR-DOS пїЅпїЅпїЅпїЅпїЅпїЅ 0 ????
 			}
 			else
 			{
@@ -1410,7 +1409,7 @@ byte beta_sys_read()
 
 void beta_write_port( byte port, byte data )
 {
-//  TRACE(("beta_write_port: (%02x, %02x)\n", port, data));
+	TRACE(("beta_write_port: (%02x, %02x)\n", port, data));
 	if ( port == BETA_PORT_CMD )
 	{
 		wd_cmd_write( data );

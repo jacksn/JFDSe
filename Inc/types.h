@@ -1,9 +1,13 @@
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
+#include "system.h"
+
 typedef unsigned int dword;
-typedef unsigned short word;
-typedef unsigned char byte;
+//typedef unsigned short word;
+//typedef unsigned char byte;
+#define word uint16_t
+#define byte uint8_t
 
 #ifndef __cplusplus
 typedef enum { false = 0, true  = !false } bool;
@@ -14,11 +18,11 @@ typedef enum { false = 0, true  = !false } bool;
 #define FALSE false
 
 #ifndef min
-#define min( x, y ) ( x > y ? y : x )
+	#define min( x, y ) ( x > y ? y : x )
 #endif
 
 #ifndef max
-#define max( x, y ) ( x > y ? x : y )
+	#define max( x, y ) ( x > y ? x : y )
 #endif
 
 #define countof(a)   (sizeof(a) / sizeof(*(a)))
@@ -38,5 +42,11 @@ typedef enum { false = 0, true  = !false } bool;
 #define PROGMEM
 #define PROGMEM_PTR
 #endif
+
+typedef struct
+{
+	char name[ PATH_SIZE ];
+	int readOnly;
+} CDiskImage;
 
 #endif

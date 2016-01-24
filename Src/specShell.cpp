@@ -1,3 +1,4 @@
+/*
 #include <stdio.h>
 #include <string.h>
 #include <new>
@@ -1451,7 +1452,7 @@ void Shell_SaveSnapshot()
 
     byte specPortFe = SystemBus_Read( 0xc00016 );
     byte specPort7ffd = SystemBus_Read( 0xc00017 );
-    /*TODO scorpion*/
+    //TODO scorpion
 
     byte page = ( specPort7ffd & ( 1 << 3 ) ) != 0 ? 7 : 5;
 
@@ -2367,3 +2368,4 @@ void Debugger_Enter()
     SystemBus_Write( 0xc00021, 0 ); //armVideoPage
     SystemBus_Write( 0xc00022, 0 ); //armBorder
 }
+*/

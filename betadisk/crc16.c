@@ -1,4 +1,5 @@
 #include "crc16.h"
+#include "stdint.h"
 
 static const word crc_table[256] =
 {
@@ -41,7 +42,7 @@ word crc_init()
 	return 0xffff;
 }
 
-word crc_add( word crc, byte data )
+word crc_add( word crc, uint8_t data )
 {
 	return ( ( crc << 8 ) ^ crc_table[ (( crc >> 8 ) ^ data ) & 0xff ] ) & 0xffff;
 }
