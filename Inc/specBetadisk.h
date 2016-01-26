@@ -2,7 +2,6 @@
 #define SPEC_BETADISK_H_INCLUDED
 
 #include "types.h"
-#include "system.h"
 
 #if ADVANCED_BETADISK
 
@@ -48,20 +47,20 @@ enum
 
 void beta_init();
 
-int open_dsk_image( uint8_t drv_id, const char *filename );
-void close_dsk_image( uint8_t drv_id );
+int open_dsk_image( byte drv_id, const char *filename );
+void close_dsk_image( byte drv_id );
 
-void beta_write_port( uint8_t port, uint8_t data );
-uint8_t beta_read_port( uint8_t port );
+void beta_write_port( byte port, byte data );
+byte beta_read_port( byte port );
 
-uint8_t beta_get_state();
-uint8_t beta_cur_drv();
+byte beta_get_state();
+byte beta_cur_drv();
 int beta_leds();
 
-uint8_t beta_is_disk_wp( uint8_t drv );
-void beta_set_disk_wp( uint8_t drv, uint8_t wp );
+byte beta_is_disk_wp( byte drv );
+void beta_set_disk_wp( byte drv, byte wp );
 
-uint8_t beta_is_disk_loaded( uint8_t drv );
+byte beta_is_disk_loaded( byte drv );
 
 #endif
 

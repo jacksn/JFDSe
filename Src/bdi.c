@@ -11,6 +11,7 @@
 #include "wd1793.h"
 #include "floppy.h"
 #include "fdc.h"
+#include "dskdebug.h"
 
 #define BDI_PORT_WD_A1A0(x)		(((x) & 0x60) >> 5)
 #define BDI_PORT(x)				((x) & 0x80)

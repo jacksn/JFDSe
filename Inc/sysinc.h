@@ -1,7 +1,7 @@
 #define TRACE( x )      __TRACE x
 //#define TRACE( x )
 
-#define FDC_PORTABLE			1
+#define FDC_PORTABLE			0
 #define TRD_ON_ODI				0
 
 #define BDI_TRACE_FLAG          0

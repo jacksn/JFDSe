@@ -15,7 +15,7 @@
 / Functions and Buffer Configurations
 /-----------------------------------------------------------------------------*/
 
-#define _FS_TINY             1      /* 0:Normal or 1:Tiny */
+#define _FS_TINY             0      /* 0:Normal or 1:Tiny */
 /* This option switches tiny buffer configuration. (0:Normal or 1:Tiny)
 /  At the tiny configuration, size of the file object (FIL) is reduced _MAX_SS
 /  bytes. Instead of private sector buffer eliminated from the file object,
@@ -49,17 +49,17 @@
 /* This option switches filtered directory read feature and related functions,
 /  f_findfirst() and f_findnext(). (0:Disable or 1:Enable) */
 
-#define _USE_MKFS            1
+#define _USE_MKFS            0
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
-#define _USE_FASTSEEK        1
+#define _USE_FASTSEEK        0
 /* This option switches fast seek feature. (0:Disable or 1:Enable) */
 
 #define _USE_LABEL           0
 /* This option switches volume label functions, f_getlabel() and f_setlabel().
 /  (0:Disable or 1:Enable) */
 
-#define _USE_FORWARD         1
+#define _USE_FORWARD         0
 /* This option switches f_forward() function. (0:Disable or 1:Enable)
 /  To enable it, also _FS_TINY need to be set to 1. */
 
@@ -67,7 +67,7 @@
 / Locale and Namespace Configurations
 /-----------------------------------------------------------------------------*/
 
-#define _CODE_PAGE         852
+#define _CODE_PAGE         855
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
@@ -98,8 +98,8 @@
 /   874  - Thai (OEM, Windows)
 /   1    - ASCII (No extended character. Valid for only non-LFN configuration.) */
 
-#define _USE_LFN     0    /* 0 to 3 */
-#define _MAX_LFN     255    /* Maximum LFN length to handle (12 to 255) */
+#define _USE_LFN     1    /* 0 to 3 */
+#define _MAX_LFN     63    /* Maximum LFN length to handle (12 to 255) */
 /* The _USE_LFN option switches the LFN feature.
 /
 /   0: Disable LFN feature. _MAX_LFN has no effect.
@@ -118,7 +118,7 @@
 /  To use Unicode string for the path name, enable LFN feature and set _LFN_UNICODE
 /  to 1. This option also affects behavior of string I/O functions. */
 
-#define _STRF_ENCODE    3
+#define _STRF_ENCODE    0
 /* When _LFN_UNICODE is 1, this option selects the character encoding on the file to
 /  be read/written via string I/O functions, f_gets(), f_putc(), f_puts and f_printf().
 /
@@ -129,7 +129,7 @@
 /
 /  When _LFN_UNICODE is 0, this option has no effect. */
 
-#define _FS_RPATH       2 /* 0 to 2 */
+#define _FS_RPATH       0 /* 0 to 2 */
 /* This option configures relative path feature.
 /
 /   0: Disable relative path feature and remove related functions.

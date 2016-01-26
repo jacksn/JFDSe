@@ -158,34 +158,12 @@ static inline byte read_le_byte(FIL *f, byte *dst)
 
 static inline byte read_le_word(FIL *f, word *dst)
 {
-#if defined(AVR_CTRL)
-	byte w[2];
-	if ( !read_file(f, w, 2) )
-	{
-		return 0;
-	}
-
-	*dst = (((word)w[1]) << 8) | ((word)w[0]);
-	return 2;
-#else
 	return read_file(f, (byte *)dst, sizeof(*dst));
-#endif
 }
 
 static inline byte read_le_dword(FIL *f, dword *dst)
 {
-#if defined(AVR_CTRL)
-	byte dw[4];
-	if ( !read_file(f, dw, 4) )
-	{
-		return 0;
-	}
-
-	*dst = (((dword)dw[3]) << 24) | (((dword)dw[2]) << 16) | (((dword)dw[1]) << 8) | ((dword)dw[0]);
-	return 4;
-#else
 	return read_file(f, (byte *)dst, sizeof(*dst));
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////

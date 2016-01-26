@@ -1,4 +1,3 @@
-/*
 #include<malloc.h>
 
 #include "system.h"
@@ -114,4 +113,5 @@ void CFifo::WriteByte( byte data )
 	portEXIT_CRITICAL();
 }
 
-*/
+
+

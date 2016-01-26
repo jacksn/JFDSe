@@ -84,7 +84,14 @@ volatile uint32_t tempData = 0;
 volatile uint32_t tempIORQDOS = 0;
 volatile uint32_t tempRDWR = 0;
 
+typedef struct
+{
+	char name[ PATH_SIZE ];
+	int readOnly;
+} CDiskImage;
+
 CDiskImage specImages[4];
+
 //
 //
 long int trackListBase;
@@ -119,20 +126,20 @@ void TIM4_Config(void);
 void Status2LCD (void);
 static void fault_err (FRESULT rc);
 static void _delay(__IO uint32_t nCount);
-void BDI_ResetWrite(void);
-void BDI_Write(uint8_t);
-void BDI_ResetRead(word);
-bool BDI_Read(uint8_t*);
+//void BDI_ResetWrite(void);
+//void BDI_Write(uint8_t);
+//void BDI_ResetRead(uint16_t);
+//bool BDI_Read(uint8_t*);
 void BDI_Routine(void);
-dword get_ticks(void);
-void bdiStopTimer(void);
-void BDI_StartTimer(void);
+uint32_t get_ticks(void);
 void __TRACE( const char *str, ... );
 uint8_t readCPUDataBus(void);
 void writeCPUDataBus(uint8_t data);
 void bdiUpdateDisks(void);
 void bdiInitDisks(void);
 void SD_Init(void);
+void BDI_StopTimer();
+void BDI_StartTimer();
 
 /* USER CODE END PFP */
 
@@ -196,7 +203,7 @@ int main(void)
 				lcdPrintStr(VERSION);
 				SD_Init();
 				fdc_init();
-				//bdiInitDisks();
+				bdiInitDisks();
 				//floppy_open();
 				HAL_Delay(100);
 
@@ -485,51 +492,52 @@ static void _delay(__IO uint32_t nCount)
 
 	for (index = (100000 * nCount); index != 0; index--);
 }
-void BDI_ResetWrite()
+/*void BDI_ResetWrite()
 {
-/*
-	trdosFifoReadRst <= '1';
- */
+
+//	trdosFifoReadRst <= '1';
+
 //	SystemBus_WriteAtAddress( 0xc00060, 0x8000 );
 }
 
 void BDI_Write( uint8_t data )
 {
-/*
-	trdosFifoReadWrTmp <= data;
-	trdosFifoReadWr <= '1';
-*/
+
+//	trdosFifoReadWrTmp <= data;
+//	trdosFifoReadWr <= '1';
+
 //    SystemBus_WriteAtAddress( 0xc00060, data );
 	writeCPUDataBus(data);
 }
 
-void BDI_ResetRead( word counter )
+void BDI_ResetRead( uint16_t counter )
 {
-/*
-	trdosFifoWriteRst <= ARM_AD( 15 );
-	trdosFifoWriteCounter <= unsigned( ARM_AD( 10 downto 0 ));
- */
+
+//	trdosFifoWriteRst <= ARM_AD( 15 );
+//	trdosFifoWriteCounter <= unsigned( ARM_AD( 10 downto 0 ));
+
 //    SystemBus_WriteAtAddress( 0xc00061, 0x8000 | counter );
 }
 
 bool BDI_Read( uint8_t *data )
 {
-/*
+
 	if addressReg( 7 downto 0 ) = x"61" then
 		ARM_AD <= trdosFifoWriteReady & "0000000" & trdosFifoWriteRdTmp;
 		if trdosFifoWriteReady = '1' then
 			trdosFifoWriteRd <= '1';
 		end if;
 
-	word result = SystemBus_ReadAtAddress( 0xc00061 );
+	uint16_t result = SystemBus_ReadAtAddress( 0xc00061 );
 
     *data = (byte) result;
 
     return ( result & 0x8000 ) != 0;
-*/
+
 	*data = (uint8_t) readCPUDataBus();
 	return 1;
 }
+*/
 
 void BDI_Routine()
 {
@@ -539,7 +547,7 @@ void BDI_Routine()
     		if addressReg( 7 downto 0 ) = x"19" then
     			ARM_AD <= x"00" & b"000000" & specTrdosWr & specTrdosWait;
     */
-    //word trdosStatus = SystemBus_ReadAtAddress( 0xc00019 );
+    //uint16_t trdosStatus = SystemBus_ReadAtAddress( 0xc00019 );
 
     if (nIORQnDOS == 0)
     {
@@ -573,7 +581,7 @@ void BDI_Routine()
         	//byte trdosData = SystemBus_ReadAtAddress( 0xc0001b );
         	trdosData = readCPUDataBus();
             fdc_write( trdosAddr, trdosData );
-            //__TRACE( "W: 0x%.2x,  0x%.2x\n", trdosAddr, trdosData );
+            __TRACE( "W: 0x%.2x,  0x%.2x\n", trdosAddr, trdosData );
 
 /*            if( LOG_BDI_PORTS )
             {
@@ -611,7 +619,7 @@ void BDI_Routine()
             //cpuDin <= trdosData;
             //SystemBus_WriteAtAddress( 0xc0001b, trdosData );
             writeCPUDataBus(trdosData);
-            //__TRACE( "R: 0x%.2x,  0x%.2x\n", trdosAddr, trdosData );
+            __TRACE( "R: 0x%.2x,  0x%.2x\n", trdosAddr, trdosData );
 
 /*
             if( LOG_BDI_PORTS )
@@ -671,19 +679,9 @@ void BDI_Routine()
 	CPUDataBusPort->CRH = 0x44444444;
 }
 
-dword get_ticks()
+uint32_t get_ticks()
 {
     return bdiTimer;
-}
-
-void bdiStopTimer()
-{
-    bdiTimerFlag = false;
-}
-
-void BDI_StartTimer()
-{
-    bdiTimerFlag = true;
 }
 
 void __TRACE( const char *str, ... )
@@ -792,6 +790,17 @@ void SD_Init()
 	}
 
 }
+
+void BDI_StopTimer()
+{
+    bdiTimerFlag = false;
+}
+
+void BDI_StartTimer()
+{
+    bdiTimerFlag = true;
+}
+
 /* USER CODE END 4 */
 
 #ifdef USE_FULL_ASSERT

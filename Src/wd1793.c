@@ -10,6 +10,7 @@
 #include "floppy.h"
 #include "wd1793.h"
 #include "fdc.h"
+#include "dskdebug.h"
 
 #define WD_CLOCK	   		2
 #define RESTORE_ON_RESET	1

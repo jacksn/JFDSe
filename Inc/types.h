@@ -1,13 +1,13 @@
+/*
+ *  This file is a part of spec2009 project.
+ */
+
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
-#include "system.h"
-
 typedef unsigned int dword;
-//typedef unsigned short word;
-//typedef unsigned char byte;
-#define word uint16_t
-#define byte uint8_t
+typedef unsigned short word;
+typedef unsigned char byte;
 
 #ifndef __cplusplus
 typedef enum { false = 0, true  = !false } bool;
@@ -18,16 +18,21 @@ typedef enum { false = 0, true  = !false } bool;
 #define FALSE false
 
 #ifndef min
-	#define min( x, y ) ( x > y ? y : x )
+#define min( x, y ) ( x > y ? y : x )
 #endif
 
 #ifndef max
-	#define max( x, y ) ( x > y ? x : y )
+#define max( x, y ) ( x > y ? x : y )
 #endif
 
 #define countof(a)   (sizeof(a) / sizeof(*(a)))
 
-#ifdef __GNUC__
+#endif
+
+#ifndef TYPES_H_D
+#define TYPES_H_D
+
+#if defined(__GNUC__)
 #define PACKED __attribute__((packed))
 #define WEAK __attribute__((weak))
 #else
@@ -42,11 +47,5 @@ typedef enum { false = 0, true  = !false } bool;
 #define PROGMEM
 #define PROGMEM_PTR
 #endif
-
-typedef struct
-{
-	char name[ PATH_SIZE ];
-	int readOnly;
-} CDiskImage;
 
 #endif

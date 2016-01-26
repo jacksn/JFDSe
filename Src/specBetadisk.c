@@ -122,9 +122,9 @@ typedef struct
 	byte erased;
 	byte label[8];
 	byte unused_4[3];
-} sys_sec_area;
+} sys_sec_area __attribute__(( packed ) );
 
-const /*__attribute__(( packed )) */ sys_sec_area scl_sys_sec_def =
+const sys_sec_area scl_sys_sec_def =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 32, 32, 32, 32, 32, 32, 32, 32, 32 }, { 0 }, 0, { 32, 32, 32, 32, 32, 32, 32, 32 }, { 0, 0, 0 }
 };
@@ -316,14 +316,14 @@ int open_dsk_image( byte drv_id, const char *filename )
 	FIL f;
 	FILINFO fi;
 
-    //char lfn[1];
-    //fi.lfname = lfn;
-    //fi.lfsize = 0;
+    char lfn[1];
+    fi.lfname = lfn;
+    fi.lfsize = 0;
 
 	const char *p_ext;
 	const char *p_name;
 
-	byte wp = 0, fmt, nfiles/*, boot_present,  boot_file*/;
+	byte wp = 0, fmt, boot_present, nfiles, boot_file;
 	word cyl_cnt, side_cnt, i, last_sec;
 
 	p_ext = filename + strlen( filename );
@@ -365,8 +365,8 @@ int open_dsk_image( byte drv_id, const char *filename )
 
 	fmt &= 0x7f;
 
-	//boot_present = 0;
-	//boot_file = 0;
+	boot_present = 0;
+	boot_file = 0;
 
 	if ( fmt == DISK_SCL )
 	{
@@ -1409,7 +1409,7 @@ byte beta_sys_read()
 
 void beta_write_port( byte port, byte data )
 {
-	TRACE(("beta_write_port: (%02x, %02x)\n", port, data));
+//  TRACE(("beta_write_port: (%02x, %02x)\n", port, data));
 	if ( port == BETA_PORT_CMD )
 	{
 		wd_cmd_write( data );

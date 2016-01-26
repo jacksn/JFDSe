@@ -118,7 +118,7 @@ void EXTI9_5_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-	static dword tick = 0;
+	static uint32_t tick = 0;
 
 	if( delayTimer >= 25 )
 		delayTimer -= 25;
@@ -132,7 +132,7 @@ void TIM4_IRQHandler(void)
 	if( tick >= 400 )  // 100Hz
 	{
 		tick = 0;
-	    static dword tick2 = 0;
+	    static uint32_t tick2 = 0;
 
 	    tick2++;
 	    if( tick2 == 100 ) // 1Hz
